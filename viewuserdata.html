@@ -1,0 +1,38 @@
+<div id="global-header-data"></div>
+
+<style>
+    #global-header-data {
+        background: linear-gradient(135deg, #2c3e50, #1a252f);
+        padding: 10px 20px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        direction: rtl;
+    }
+    .user-badge {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 6px 15px;
+        border-radius: 50px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        animation: fadeInSlide 0.5s ease-out;
+    }
+    .user-badge i { font-size: 24px; color: #e67e22; }
+    .user-info-text { display: flex; flex-direction: column; }
+    .user-name { color: #fff; font-weight: 600; font-size: 14px; }
+    .user-email { color: #bdc3c7; font-size: 11px; }
+    .logout-mini-btn {
+        background: none; border: none; color: #e74c3c; cursor: pointer;
+        font-size: 16px; margin-right: 5px; transition: transform 0.2s;
+    }
+    .logout-mini-btn:hover { transform: scale(1.1); color: #c0392b; }
+    @keyframes fadeInSlide {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

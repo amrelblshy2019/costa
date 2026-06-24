@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الدخول المحترفة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #e67e22; --dark: #2c3e50; --bg: #f5f6fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .auth-container { background: white; width: 100%; max-width: 450px; padding: 35px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); position: relative; overflow: hidden; }
+        .auth-box { display: none; animation: slideFade 0.4s ease-in-out forwards; }
+        .auth-box.active { display: block; }
+        h2 { text-align: center; color: var(--dark); margin-bottom: 25px; font-weight: 700; }
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-group i { position: absolute; right: 15px; top: 15px; color: #a0a0a0; }
+        .input-group input { width: 100%; padding: 12px 45px 12px 15px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; transition: 0.3s; background: #fafafa; }
+        .input-group input:focus { border-color: var(--primary); outline: none; background: #fff; box-shadow: 0 0 8px rgba(230,126,34,0.15); }
+        .submit-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--primary), #d35400); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(230,126,34,0.3); }
+        .switch-text { text-align: center; margin-top: 20px; font-size: 14px; color: #7f8c8d; }
+        .switch-text a { color: var(--primary); text-decoration: none; font-weight: bold; cursor: pointer; }
+        @keyframes slideFade { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <div class="auth-box active" id="loginBox">
+        <h2>تسجيل الدخول</h2>
+        <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="loginEmail" placeholder="البريد الإلكتروني">
+        </div>
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="loginPassword" placeholder="كلمة المرور">
+        </div>
+        <button class="submit-btn" onclick="login()">دخول للموقع</button>
+        <div class="switch-text">
+            ليس لديك حساب؟ <a onclick="switchBox('registerBox')">حساب جديد لأول مرة</a><br><br>
+            <a onclick="switchBox('forgotBox')" style="color:#7f8c8d; font-weight:normal;">نسيت كلمة السر؟</a>
+        </div>
+    </div>
+
+    <div class="auth-box" id="registerBox">
+        <h2>حساب جديد لأول مرة</h2>
+        <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" id="regName" placeholder="الاسم بالكامل">
+        </div>
+        <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="regEmail" placeholder="البريد الإلكتروني">
+        </div>
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="regPassword" placeholder="كلمة المرور">
+        </div>
+        <button class="submit-btn" onclick="register()">إنشاء الحساب</button>
+        <div class="switch-text">لديك حساب بالفعل؟ <a onclick="switchBox('loginBox')">سجل دخولك</a></div>
+    </div>
+
+    <div class="auth-box" id="forgotBox">
+        <h2>استعادة كلمة السر</h2>
+        <p style="text-align:center; color:#7f8c8d; font-size:14px; margin-bottom:20px;">أدخل إيميلك وسنقوم بإرسال كلمة المرور المسجلة إليك فوراً.</p>
+        <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="forgotEmail" placeholder="بريدك الإلكتروني المسجل">
+        </div>
+        <button class="submit-btn" onclick="recoverPassword()">إرسال كلمة السر للإيميل</button>
+        <div class="switch-text"><a onclick="switchBox('loginBox')">العودة لتسجيل الدخول</a></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+    emailjs.init("YOUR_PUBLIC_KEY"); // استبدل بمفتاحك من EmailJS
+
+    let dbUsers = JSON.parse(localStorage.getItem("db_users")) || [];
+
+    function switchBox(id) {
+        document.querySelectorAll('.auth-box').forEach(box => box.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function register() {
+        const name = document.getElementById("regName").value;
+        const email = document.getElementById("regEmail").value.toLowerCase().trim();
+        const password = document.getElementById("regPassword").value;
+
+        if(!name || !email || !password) return alert("يرجى ملء جميع الخانات!");
+        if(dbUsers.find(u => u.email === email)) return alert("هذا الحساب مسجل مسبقاً!");
+
+        dbUsers.push({ name, email, password });
+        localStorage.setItem("db_users", JSON.stringify(dbUsers));
+        alert("تم تسجيلك بنجاح! يمكنك الآن تسجيل الدخول.");
+        switchBox('loginBox');
+    }
+
+    function login() {
+        const email = document.getElementById("loginEmail").value.toLowerCase().trim();
+        const password = document.getElementById("loginPassword").value;
+
+        const user = dbUsers.find(u => u.email === email && u.password === password);
+        if(user) {
+            localStorage.setItem("tourism_user", JSON.stringify(user));
+            window.location.href = "index.html"; // التوجه التلقائي لصفحة الاندكس الخاصة بك
+        } else {
+            alert("البيانات المدخلة غير صحيحة!");
+        }
+    }
+
+    function recoverPassword() {
+        const email = document.getElementById("forgotEmail").value.toLowerCase().trim();
+        const user = dbUsers.find(u => u.email === email);
+
+        if(!user) return alert("هذا الإيميل غير مسجل لدينا!");
+
+        // إرسال الإيميل أوتوماتيكياً بواسطة كود الـ JS
+        emailjs.send("YOUR_SERVICE_ID", "YOUR_FORGOT_TEMPLATE_ID", {
+            to_email: user.email,
+            user_name: user.name,
+            user_password: user.password
+        }).then(() => {
+            alert("تم إرسال رسالة بها كلمة السر إلى إيميلك بنجاح!");
+            switchBox('loginBox');
+        }).catch(() => alert("حدث خطأ أثناء إرسال الإيميل. تأكد من إعدادات الخدمة."));
+    }
+</script>
+</body>
+</html>

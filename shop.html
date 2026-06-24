@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر الهدايا التذكارية والمنتجات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #27ae60; --dark: #2c3e50; --bg: #f5f6fa; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); padding-bottom: 90px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; color: var(--dark); margin-bottom: 30px; font-weight: 700; }
+        
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+        .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; transition: 0.3s; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .product-card img { width: 100%; height: 220px; object-fit: cover; }
+        .product-info { padding: 20px; }
+        .product-info h3 { margin: 0 0 10px 0; color: var(--dark); font-size: 18px; }
+        .price { color: var(--primary); font-size: 19px; font-weight: bold; margin-bottom: 15px; }
+        .btn-buy { background: var(--primary); color: white; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-buy:hover { background: #219150; }
+
+        /* سلة تسوق مرنة مخصصة للموبايل وأسفل الصفحة */
+        .cart-bar-shop { position: fixed; bottom: 0; left: 0; right: 0; background: var(--dark); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; z-index: 1000; }
+        .shop-popup-panel { position: fixed; bottom: -100%; left: 0; right: 0; background: white; max-height: 70vh; overflow-y: auto; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 25px rgba(0,0,0,0.2); transition: 0.4s ease-in-out; z-index: 999; padding: 25px; box-sizing: border-box; }
+        .shop-popup-panel.open { bottom: 0; }
+        .item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .wa-shop-btn { background: #25D366; color: white; border: none; width: 100%; padding: 13px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div id="global-header-data"></div>
+
+<div class="container">
+    <h1>متجر المنتجات والهدايا الفرعونية</h1>
+    <div class="products-grid" id="productsLayout"></div>
+</div>
+
+<div class="cart-bar-shop" onclick="toggleShopCart()">
+    <span><i class="fas fa-shopping-bag"></i> منتجاتك المحددة (<span id="pCount">0</span>)</span>
+    <span id="pTotal">0 ج.م</span>
+</div>
+
+<div class="shop-popup-panel" id="shopPanel">
+    <h3 style="margin-top:0; color:var(--dark); border-bottom:1px solid #ddd; padding-bottom:10px;">المنتجات المختارة للشراء</h3>
+    <div id="shopItemsList"></div>
+    <button class="wa-shop-btn" onclick="checkoutProducts()"><i class="fab fa-whatsapp"></i> طلب المنتجات عبر الواتس آب</button>
+</div>
+
+<script src="global-auth.js"></script>
+<script>
+    // مصفوفة المنتجات والصور في المتجر
+    const shopProducts = [
+        { id: 201, title: "تمثال توت عنخ آمون مطلي ذهب صغير", price: 450, img: "https://images.unsplash.com/photo-1600577916048-804c9191e36c?w=500" },
+        { id: 202, title: "برديات فرعونية أصلية مرسومة يدوياً", price: 250, img: "https://images.unsplash.com/photo-1599733589046-10c005739ef9?w=500" },
+        { id: 203, title: "قلادة الجعران الفرعوني الفضية نادرة", price: 850, img: "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=500" }
+    ];
+
+    let cart = JSON.parse(localStorage.getItem("tourism_cart")) || [];
+
+    function renderProducts() {
+        const layout = document.getElementById("productsLayout");
+        layout.innerHTML = "";
+        shopProducts.forEach(prod => {
+            layout.innerHTML += `
+                <div class="product-card">
+                    <img src="${prod.img}" alt="${prod.title}">
+                    <div class="product-info">
+                        <h3>${prod.title}</h3>
+                        <div class="price">${prod.price} ج.م</div>
+                        <button class="btn-buy" onclick="addProductToCart(${prod.id})">شراء وإضافة للسلة</button>
+                    </div>
+                </div>
+            `;
+        });
+        updateShopCartUI();
+    }
+
+    function addProductToCart(id) {
+        const product = shopProducts.find(p => p.id === id);
+        const exist = cart.find(c => c.id === id);
+        if(exist) { exist.qty += 1; } else { cart.push({...product, qty: 1, type: 'منتج'}); }
+        localStorage.setItem("tourism_cart", JSON.stringify(cart));
+        updateShopCartUI();
+    }
+
+    function updateShopCartUI() {
+        const count = cart.reduce((acc, item) => acc + item.qty, 0);
+        const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+        document.getElementById("pCount").innerText = count;
+        document.getElementById("pTotal").innerText = total + " ج.م";
+
+        const list = document.getElementById("shopItemsList");
+        list.innerHTML = "";
+        cart.forEach(item => {
+            list.innerHTML += `
+                <div class="item-row">
+                    <span>${item.title} (عدد: ${item.qty})</span>
+                    <span>${item.price * item.qty} ج.م</span>
+                </div>
+            `;
+        });
+    }
+
+    function toggleShopCart() { document.getElementById("shopPanel").classList.toggle("open"); }
+
+    function checkoutProducts() {
+        const client = JSON.parse(localStorage.getItem("tourism_user"));
+        if(cart.length === 0) return alert("السلة فارغة!");
+
+        let text = `طلب شراء منتجات وهدايا من الموقع\nالعميل: ${client.name}\n\nالمنتجات:\n`;
+        cart.forEach((c, i) => { text += `${i+1}. ${c.title} (العدد: ${c.qty})\n`; });
+        const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+        text += `\nإجمالي الفاتورة: ${total} ج.م`;
+
+        window.open(`https://wa.me/201006185776?text=${encodeURIComponent(text)}`, '_blank');
+        cart = [];
+        localStorage.setItem("tourism_cart", JSON.stringify(cart));
+        alert("تم إرسال الطلب بنجاح! جاري العودة للرئيسية.");
+        window.location.href = "index.html";
+    }
+
+    renderProducts();
+</script>
+</body>
+</html>
